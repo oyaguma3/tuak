@@ -11,6 +11,38 @@ API 形状は `github.com/wmnsk/milenage` と同様の使い勝手を意識し�
 
 ## 使い方
 
+### パラメータと長さ
+
+TUAK は運用単位で長さを固定して使う想定です。本実装はビット長の指定と
+入力バイト長を検証します。
+
+- `K`: 128 または 256 bits（`len(K) == 16` または `32`）
+- `TOP`/`TOPc`: 256 bits（`len == 32`）
+- `RAND`: 128 bits（`len == 16`）
+- `SQN`: 48 bits（`len == 6`）
+- `AMF`: 16 bits（`len == 2`）
+
+出力長（bits）:
+
+- `MAC` (f1/f1*): 64 / 128 / 256
+- `RES` (f2): 32 / 64 / 128 / 256
+- `CK` (f3): 128 / 256
+- `IK` (f4): 128 / 256
+- `AK`/`AK*` (f5/f5*): 48（常に 6 バイト）
+
+`WithKLength` を省略した場合は `len(K)` から推定されます。`KeccakIterations`
+の既定値は 1 です。
+
+### API概要
+
+- `ComputeTOPc(k, top, opts...)` は K と TOP から TOPc を導出
+- `New(k, top, rand, sqn, amf, opts...)` は TOP 指定でコンテキスト作成
+- `NewWithTOPc(k, topc, rand, sqn, amf, opts...)` は TOPc 指定で作成
+- `F1()` は MAC-A（長さ = `MACLength/8`）
+- `F1Star()` は MAC-S（長さ = `MACLength/8`）
+- `F2345()` は `(RES, CK, IK, AK)` を返す
+- `F5Star()` は AK*（常に 6 バイト）
+
 TOPc の導出と f1/f1*/f2345/f5* の例:
 
 ```go

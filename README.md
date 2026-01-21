@@ -12,6 +12,38 @@ Note on bit/byte ordering:
 
 ## Usage
 
+### Parameters and lengths
+
+TUAK requires fixed lengths per deployment. The implementation expects these
+lengths in bits and validates input byte sizes:
+
+- `K`: 128 or 256 bits (`len(K) == 16` or `32`)
+- `TOP`/`TOPc`: 256 bits (`len == 32`)
+- `RAND`: 128 bits (`len == 16`)
+- `SQN`: 48 bits (`len == 6`)
+- `AMF`: 16 bits (`len == 2`)
+
+Output lengths (bits):
+
+- `MAC` (f1/f1*): 64, 128, or 256
+- `RES` (f2): 32, 64, 128, or 256
+- `CK` (f3): 128 or 256
+- `IK` (f4): 128 or 256
+- `AK`/`AK*` (f5/f5*): 48 (always 6 bytes)
+
+If `WithKLength` is omitted, it is inferred from `len(K)`; `KeccakIterations`
+defaults to 1.
+
+### API overview
+
+- `ComputeTOPc(k, top, opts...)` derives TOPc from K and TOP.
+- `New(k, top, rand, sqn, amf, opts...)` creates a context (TOPc computed as needed).
+- `NewWithTOPc(k, topc, rand, sqn, amf, opts...)` creates a context with precomputed TOPc.
+- `F1()` returns MAC-A (byte length = `MACLength/8`).
+- `F1Star()` returns MAC-S (byte length = `MACLength/8`).
+- `F2345()` returns `(RES, CK, IK, AK)` using `RESLength/CKLength/IKLength`.
+- `F5Star()` returns AK* (always 6 bytes).
+
 Compute TOPc and run f1/f1*/f2345/f5*:
 
 ```go
@@ -34,8 +66,8 @@ if err != nil {
 
 macA, _ := t.F1()
 macS, _ := t.F1Star()
-res, ck, ik, ak, _ := t.F2345()
-akStar, _ := t.F5Star()
+	res, ck, ik, ak, _ := t.F2345()
+	akStar, _ := t.F5Star()
 ```
 
 ## Debugging
